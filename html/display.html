@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>睡眠障碍知识图谱</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('../picture/h3图1.jpg');
+      /* 确保该路径与您的 HTML 文件相对应 */
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: 100vh;
+      align-items: center;
+    }
+
+   .page-title {
+      text-align: center;
+      padding: 20px;
+      background-color: #a1c0e0;
+      /* 颜色变浅后的蓝色 */
+      color: white;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+   .page-title h1 {
+      margin: 0;
+      padding: 0;
+      font-size: 2.5em;
+    }
+
+   .page-title p {
+      margin: 10px 0 20px;
+      font-size: 15px;
+    }
+
+   .disease-blocks-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      /* 三列布局 */
+      gap: 20px;
+      /* 网格间隙 */
+      width: 90%;
+      /* 容器宽度 */
+      margin: auto;
+      /* 水平居中 */
+      padding: 20px;
+    }
+
+   .disease-block {
+      background-color: #d3e4f0;
+      border-radius: 8px;
+      padding: 10px;
+      /* 缩小内边距 */
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+      /* 添加阴影 */
+      width: 90%;
+      /* 增大块的宽度 */
+      height: 80px;
+      /* 增大块的高度 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+   .disease-block:hover {
+      background-color: #b8d8e5;
+      transform: scale(1.05);
+      /* 轻微放大效果 */
+    }
+
+   .disease-block h2 {
+      margin: 0;
+      padding: 0;
+      font-size: 1.5em;
+      /* 增大字体大小 */
+      text-align: center;
+      color: #343a40;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-title">
+    <h1>探索睡眠障碍的疾病关系</h1>
+    <p>若想深入为您了解诊断出的疾病，请点击下方相应的疾病板块，我们将为您提供更多疾病诊断相关信息。</p>
+    <div></div>
+  </div>
+
+
+  <div class="disease-blocks-container">
+    <div class="disease-block" onclick="openPage('h3.html')">
+      <h2>神经系统疾病相关睡眠障碍</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h4.html')">
+      <h2>失眠</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h5.html')">
+      <h2>睡眠呼吸障碍</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h6.html')">
+      <h2>睡眠相关性运动障碍</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h7.html')">
+      <h2>中枢性睡眠增多</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h8.html')">
+      <h2>昼夜节律失调性睡眠觉醒障碍</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h9.html')">
+      <h2>精神疾病相关睡眠障碍</h2>
+    </div>
+    <div class="disease-block" onclick="openPage('h10.html')" style="grid-column: 3;">
+      <h2>异态睡眠</h2>
+    </div>
+  </div>
+
+  <script>
+    function openPage(page) {
+      window.open(page, '_blank');
+    }
+  </script>
+</body>
+
+</html>

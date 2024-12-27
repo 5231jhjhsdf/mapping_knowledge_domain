@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>失眠关系</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    #mynetwork {
+      width: 100%;
+      height: 100%;
+      border: 1px solid lightgray;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0;
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .legend-circle {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+    }
+
+    .color-box {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+
+    .button {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #7fa7d3;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 0.3s;
+      /* margin-left: auto; */
+    }
+
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    .button:active {
+      background-color: #004085;
+    }
+
+    #fetchData {
+      float: left;
+      margin-right: 5px;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      margin-top: 20px;
+    }
+
+    #button-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      margin-top: 0;
+      /* 根据需要调整与上方按钮的间距 */
+    }
+
+
+    #nextButton {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #7fa7d3;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 0.3s;
+      margin-right: 8px;
+      /* 根据需要调整两个按钮之间的间距 */
+    }
+
+    #fetchData:hover,
+    #nextButton:hover {
+      background-color: #0056b3;
+    }
+
+    #fetchData:active,
+    #nextButton:active {
+      background-color: #004085;
+    }
+
+    #popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border: 1px solid gray;
+      border-radius: 5px;
+      box-shadow: 0 5px 15px 5px rgba(0, 0, 0, 0.3);
+      z-index: 9999;
+      text-align: center;
+    }
+
+    #jumpButton {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #7fa7d3;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+
+    #jumpButton:hover {
+      background-color: #0056b3;
+    }
+
+    #jumpButton:active {
+      background-color: #004085;
+    }
+    h3{
+      font-size: 35px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="legend">
+    <!-- <div class="legend-circle">
+      <div class="color-box" style="background-color: #33a02c;"></div>
+      <span>并发症</span>
+    </div>
+    <div class="legend-circle">
+      <div class="color-box" style="background-color: #e41a1c;"></div>
+      <span>疾病病种</span>
+    </div> -->
+    <h3>失眠关系</h3>
+    <div class="button-wrapper">
+      <button id="fetchData" class="button">点击获取数据</button>
+      <button id="nextButton" class="button">结束诊断</button>
+    </div>
+    <div id="popup" style="display: none;">
+      <p>感谢您使用本知识图谱预测系统，现在您可以点击跳转按钮至首页，您可以选择其他导航使用其他功能。</p>
+      <button id="jumpButton">跳转</button>
+    </div>
+  </div>
+  <div id="mynetwork"></div>
+  <script>
+    let currentCenterNodeId = null;
+    let nodeVisibilityMap = {};
+    const nextButton = document.getElementById('nextButton');
+    nextButton.addEventListener('click', () => {
+      const popup = document.getElementById('popup');
+      popup.style.display = 'block';
+    });
+    const jumpButton = document.getElementById('jumpButton');
+    jumpButton.addEventListener('click', () => {
+      window.location.href = 'Sleep.html';
+      const popup = document.getElementById('popup');
+      popup.style.display = 'none';
+    });
+    document.getElementById('fetchData').addEventListener('click', async () => {
+      const url = 'http://localhost:3005/d2';
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched data:', data);
+          const nodes = data.nodes.map(node => ({
+            id: node.id,
+            name: node.name,
+            itemStyle: node.itemStyle,
+            value: 10,
+            symbolSize: 30,
+            label: {
+              show: true,
+              fontSize: 10,
+              color: 'black'
+            }
+          }));
+          const edges = data.edges.map(edge => ({
+            source: edge.source,
+            target: edge.target
+          }));
+          const chartDom = document.getElementById('mynetwork');
+          const myChart = echarts.init(chartDom);
+          const option = {
+            title: {
+              // text: '疾病诊断知识图谱',
+              subtext: '相关关系包括诊断方法，药物治疗，非药物治疗以及可能的并发症',
+              left: 'center'
+            },
+            tooltip: {
+              formatter: '{b}'
+            },
+            series: [{
+              type: 'graph',
+              layout: 'force',
+              symbolSize: 30,
+              roam: true,
+              label: {
+                show: true
+              },
+              edgeSymbol: ['none', 'arrow'],
+              edgeSymbolSize: [4, 10],
+              data: nodes,
+              links: edges,
+              force: {
+                repulsion: 100,
+                gravity: 0.05,
+                edgeLength: 80,
+                layoutAnimation: true,
+                friction: 0.9
+              },
+              lineStyle: {
+                color: 'source',
+                curveness: 0.3
+              }
+            }]
+          };
+          myChart.setOption(option);
+
+          myChart.on('click', function (params) {
+            const clickedNodeId = params.data.id;
+
+            if (currentCenterNodeId === clickedNodeId) {
+              const relatedNodes = edges.filter(edge => edge.source === currentCenterNodeId || edge.target === currentCenterNodeId);
+              relatedNodes.forEach(edge => {
+                const targetNodeId = edge.source === currentCenterNodeId ? edge.target : edge.source;
+                nodeVisibilityMap[targetNodeId] = !nodeVisibilityMap[targetNodeId];
+              });
+
+              myChart.setOption({
+                series: [{
+                  type: 'graph',
+                  layout: 'force',
+                  symbolSize: 30,
+                  roam: true,
+                  label: {
+                    show: true
+                  },
+                  edgeSymbol: ['none', 'arrow'],
+                  edgeSymbolSize: [4, 10],
+                  data: nodes.filter(node => nodeVisibilityMap[node.id] !== false),
+                  links: edges.filter(edge => {
+                    const sourceVisible = nodeVisibilityMap[edge.source] !== false;
+                    const targetVisible = nodeVisibilityMap[edge.target] !== false;
+                    return sourceVisible && targetVisible;
+                  }),
+                  lineStyle: {
+                    color: 'source',
+                    curveness: 0.3
+                  }
+                }]
+              });
+            } else {
+              currentCenterNodeId = clickedNodeId;
+              const relatedNodes = edges.filter(edge => edge.source === currentCenterNodeId || edge.target === currentCenterNodeId);
+              relatedNodes.forEach(edge => {
+                const targetNodeId = edge.source === currentCenterNodeId ? edge.target : edge.source;
+                nodeVisibilityMap[targetNodeId] = true;
+              });
+
+              myChart.setOption({
+                series: [{
+                  type: 'graph',
+                  layout: 'force',
+                  symbolSize: 50,
+                  roam: true,
+                  label: {
+                    show: true
+                  },
+                  edgeSymbol: ['none', 'arrow'],
+                  edgeSymbolSize: [4, 10],
+                  data: nodes.filter(node => nodeVisibilityMap[node.id] !== false),
+                  links: edges.filter(edge => {
+                    const sourceVisible = nodeVisibilityMap[edge.source] !== false;
+                    const targetVisible = nodeVisibilityMap[edge.target] !== false;
+                    return sourceVisible && targetVisible;
+                  }),
+                  lineStyle: {
+                    color: 'source',
+                    curveness: 0.3
+                  }
+                }]
+              });
+            }
+          });
+        } else {
+          console.error('数据获取失败');
+        }
+      } catch (error) {
+        console.error('请求出错', error);
+      }
+    });
+  </script>
+</body>
+
+</html>

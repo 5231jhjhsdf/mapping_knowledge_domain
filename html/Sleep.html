@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能助手界面</title>
+  <style>
+    .page-title {
+      text-align: center;
+      /* 文本居中 */
+      margin: 20px 0;
+      /* 上下边距 */
+
+    }
+
+    .fonts {
+      font-size: 20px;
+    }
+
+    .page-title h1 {
+      color: #5c67f2;
+      /* 标题颜色 */
+      font-size: 2.5em;
+      /* 标题字体大小 */
+      transition: color 0.5s ease;
+      /* 颜色变化过渡效果 */
+      text-align: center;
+      /* display: none;    默认不显示 */
+    }
+
+    .page-title h1:hover {
+      color: #4a54e1;
+      /* 鼠标悬停时的颜色变化 */
+    }
+
+    .page-title p {
+      font-size: 1.2em;
+      /* 段落字体大小 */
+      color: #333;
+      /* 段落颜色 */
+
+    }
+
+    .content-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .image-container1 {
+      flex: 1;
+      margin-right: 20px;
+      /* 与右侧板块的间距 */
+      display:flex;
+      align-items: center;
+      margin-left:20px;
+    }
+
+    .gradient-background {
+      flex: 1;
+      padding: 20px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #75b8ef, #4a54e1);
+      color: white;
+    }
+
+    /* 限制图片的最大宽度，确保文本板块有足够的空间 */
+    .image-container1 img {
+      max-width: 100%;
+      /* width:auto; */
+      height: auto;
+      /* height: 500px; */
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      object-fit: contain;
+    }
+
+    body {
+      background-image: url("../picture/h3图1.jpg");
+      /* 确保路径正确 */
+      background-size: cover;
+      /* 覆盖整个容器 */
+      background-position: center;
+      /* 背景图居中显示 */
+      background-repeat: no-repeat;
+      /* 防止图片重复 */
+      opacity: 0.75;
+      /*背景透明度 */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+
+    }
+
+    .navbar {
+      font-size: 30px;
+      background-color: #6ea0ea;
+      width: 100%;
+      height: 100px;
+      /* 根据需要调整高度 */
+      display: flex;
+      /* 使用flex布局 */
+      align-items: center;
+      /* 垂直居中 */
+      justify-content: center;
+      /* 水平居中 */
+      position: relative;
+      /* 移除fixed定位 */
+      top: 0;
+      left: 0;
+      overflow: auto;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+
+    .navbar div {
+      color: white;
+      padding: 10px 15px;
+      /* 增加水平和垂直padding */
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin: 0 10px;
+      /* 增加导航项之间的间距 */
+    }
+
+    .navbar div:hover,
+    .navbar .active {
+      background-color: #5b90de;
+      /* 鼠标悬停时的背景色 */
+    }
+
+
+    .main-content {
+      margin-left: 0;
+      /* 移除左边距 */
+      padding: 20px;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+
+    .section {
+      display: none;
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      /* 确保宽度为100% */
+      height: 100vh;
+      /* 设置一个合适的高度 */
+      overflow: hidden;
+      /* 隐藏容器的滚动条 */
+    }
+
+    .iframe-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .image-container {
+      display: flex;
+      justify-content: right;
+      /* 水平居中 */
+      align-items: center;
+      /* 垂直居中 */
+      margin-top: 20px;
+      /* 与上文内容的距离 */
+    }
+
+    .image-container img {
+      max-width: 80%;
+      /* 图片最大宽度调整为容器宽度的80% */
+      height: 700px;
+      /* 高度自适应 */
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      object-fit: contain;
+      /* 保持宽高比，裁剪多余部分 */
+    }
+
+    #ai {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease-in-out;
+      position: relative
+    }
+
+    #ai .image-container {
+      position: absolute;
+      /* 绝对定位 */
+      top: 50%;
+      /* 垂直居中 */
+      left: 50%;
+      /* 水平居中 */
+      transform: translate(-50%, -50%);
+      /* 偏移自身50%以居中 */
+    }
+
+    #ai:hover {
+      transform: translateY(-5px);
+    }
+
+    .design-elements {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* 水平居中 */
+      height: 100%;
+      /* 确保容器有足够的高度 */
+    }
+
+    .ai-icon {
+      width: 50px;
+      /* 根据实际图标大小调整 */
+      height: auto;
+      margin-right: 15px;
+    }
+
+    .sub-text {
+      font-size: 16px;
+      color: #5c67f2;
+    }
+
+    .backup-link {
+      margin-top: 10px;
+      font-size: 25px;
+      color: #666;
+    }
+
+    .backup-link a {
+      color: #5c67f2;
+      text-decoration: none;
+    }
+
+    .backup-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* .gradient-background {
+      background: linear-gradient(135deg, #75b8ef, #4a54e1);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      position: relative;
+    } */
+
+    .intro-content {
+      max-width: 800px;
+      /* 限制内容的最大宽度 */
+      margin: 0 auto;
+      /* 水平居中 */
+      position: relative;
+      /* 相对定位 */
+      z-index: 1;
+      /* 确保内容在渐变背景之上 */
+    }
+
+    .intro-content h2 {
+      color: #fff;
+      /* 标题颜色 */
+      font-size: 2em;
+      /* 标题字体大小 */
+      margin-bottom: 0.5em;
+      /* 标题与段落间距 */
+    }
+
+    .interactive-button {
+      padding: 10px 20px;
+      background-color: #5c67f2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .interactive-button:hover {
+      background-color: #4a54e1;
+    }
+
+    .text-on-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      /* 文字颜色 */
+      z-index: 2;
+      /* 确保文字在图片之上 */
+      padding: 20px;
+      /* 为文字添加一些内边距 */
+      text-align: center;
+      /* 文字居中 */
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 可选，为文字添加半透明背景以增强可读性 */
+    }
+
+    /* 列表容器样式 */
+    .list-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      /* 文字颜色 */
+      z-index: 2;
+      /* 确保文字在图片之上 */
+      padding: 20px;
+      /* 为文字添加一些内边距 */
+      text-align: center;
+      /* 文字居中 */
+      background-color: rgba(0, 0, 0, 0.5);
+      /* 可选，为文字添加半透明背景以增强可读性 */
+    }
+
+
+
+    .steps-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 50px 0;
+      /* Adjust the gap as needed */
+    }
+
+    .step {
+      background: linear-gradient(135deg, #7cb0db, #5c83b8);
+      /* 更换为更丰富的渐变背景 */
+      background-size: cover;
+      /* 让渐变覆盖整个元素 */
+      background-position: center;
+      /* 背景位置居中 */
+      background-color: #7cb0db;
+      /* Adjust the color as needed */
+      color: white;
+      padding: 30px;
+      border-radius: 1px solid rgba(0, 0, 0, 0.1);
+      /* 添加一个较淡的边框 */
+      /* Adjust the border-radius for the roundness */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      /* Add shadow for depth */
+      flex: 1 1 200px;
+      /* Allow steps to grow and shrink, and set a minimum width */
+      min-width: 200px;
+      /* Set a minimum width for the steps */
+      max-width: 300px;
+      /* Set a maximum width for the steps */
+      text-align: center;
+      position: relative;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+      /* 添加边框颜色过渡效果 */
+    }
+
+    .step:hover {
+      border-color: #4a54e1;
+      /* 鼠标悬停时的边框颜色 */
+      transform: translateY(-5px);
+      /* 鼠标悬停时轻微上移，增加动态感 */
+    }
+
+    .step::before,
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 50px;
+      height: 2px;
+      background-color: #7cb0db;
+      transition: background-color 0.3s ease;
+      /* 添加背景颜色的过渡效果 */
+    }
+
+
+    .step:hover::before,
+    .step:hover::after {
+      background-color: #4a54e1;
+      width: 60px;
+      /* 鼠标悬停时让线条变宽一点，增加动态感 */
+    }
+
+    .step::before {
+      left: -60px;
+    }
+
+    .step::after {
+      right: -60px;
+    }
+
+    .step:first-child::before,
+    .step:last-child::after {
+      content: none;
+    }
+
+    .step h3 {
+      margin: 0 0 10px 0;
+      color: #fff;
+      /* 让标题颜色更突出，这里设置为白色，可根据整体配色调整 */
+      text-transform: uppercase;
+      /* 将标题文字转为大写，增加正式感，可按需调整 */
+      letter-spacing: 1px;
+      /* 增加字符间距，提升美观度 */
+      font-family: "楷体";
+    }
+
+    .step p {
+      color: #e6e6e6;
+      /* 文本颜色稍亮一点，增强可读性 */
+      line-height: 1.5;
+      /* 调整行高，让文本更易阅读 */
+      font-family: "宋体"
+    }
+  </style>
+</head>
+
+<body>
+  <div class="navbar">
+    <div class="active" onclick="loadPage('home')">首页</div>
+    <div onclick="loadPage('knowledge')">知识图谱</div>
+    <div onclick="loadPage('ai')">AI问诊</div>
+    <div onclick="loadPage('feedback')">反馈</div>
+  </div>
+
+  <div class="main-content">
+    <div id="home" class="section">
+      <div class="page-title">
+        <h1>欢迎来到睡眠质量诊断助手</h1>
+        <p>在这里，您可以探索知识图谱、进行AI问诊或留下宝贵的反馈。</p>
+      </div>
+
+
+      <div class="steps-container">
+        <div class="step">
+          <h3>01 小助手简介</h3>
+          <p>在“首页”你可以看到使用本助手教程。</p>
+        </div>
+        <div class="step" data-target="knowledge">
+          <h3>02 知识图谱</h3>
+          <p>选择“知识图谱”深入了解睡眠障碍。</p>
+        </div>
+        <div class="step" data-target="ai">
+          <h3>03 AI问诊系统</h3>
+          <p>试试“眠诊宝”和它对话获取诊疗建议。</p>
+        </div>
+        <div class="step" data-target="feedback">
+          <h3>04 反馈</h3>
+          <p>别忘了“反馈”，让我们做得更好。</p>
+        </div>
+      </div>
+    </div>
+    <div id="knowledge" class="section">
+      <div class="iframe-container">
+        <iframe src="h1.html" frameborder="0" allowfullscreen scrolling="no"></iframe>
+      </div>
+    </div>
+    <div id="ai" class="section">
+      <h2>AI问诊</h2>
+      <p class="fonts">在这里，您可以直接与我们的AI健康助手进行对话，获取专业的健康建议和医疗信息。我们的AI助手可以为您提供24/7的即时咨询服务，无论是健康疑问还是疾病咨询，都能得到快速响应。</p>
+      <hr>
+      <!-- 备用链接，以防iframe无法加载 -->
+      <p class="backup-link"><strong>如果下面的图片无法扫码或想直接跳转，您可以通过<a href="https://chatglm.cn/share/FLBHa"
+            target="_blank">这个链接</a>直接访问AI问诊服务。</strong>
+      </p>
+      <div class="content-wrapper">
+        <div class="image-container1">
+          <img src="../picture/眠诊宝.jpeg" alt="眠诊宝" style="max-width: 300px; height: auto;">
+        </div>
+        <div class="gradient-background">
+          <h3>不良的睡眠习惯会导致失眠吗？看看你存在哪些不良的睡眠习惯:</h3>
+          <ul style="list-style-type: disc;" class="fonts"> <!-- 设置列表样式为实心圆点 -->
+            <li>忽略生物钟，熬夜超过正常就寝时间</li>
+            <li>周末睡懒觉，补上一周缺的觉</li>
+            <li>整天呆在室内，缺少户外活动</li>
+            <li>缺乏锻炼</li>
+            <li>午睡，然后希望晚上也不受影响的睡觉</li>
+            <li>晚饭后喝咖或含咖啡因的饮料</li>
+            <li>在床上看电视、使用手机、电脑等移动设备</li>
+            <li>在深夜进行激动人心的讨论或争论</li>
+            <li>睡眠环境或床不舒适</li>
+          </ul>
+        </div>
+      </div>
+      <!-- 添加一些精美的设计元素 -->
+      <div class="design-elements">
+        <img src="../picture/AI图标.png" alt="AI图标" class="ai-icon">
+        <p class="sub-text">与智能体对话，获取专业健康建议</p>
+      </div>
+
+
+    </div>
+    <div id="feedback" class="section">
+      <h2>反馈</h2>
+      <p>分享您的想法，帮助我们不断进步。</p>
+      <div class="iframe-container">
+        <iframe src="Feedback.html" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var navItems = document.querySelectorAll('.navbar div');
+    var sections = document.querySelectorAll('.section');
+
+    function loadPage(page) {
+      // 移除所有导航项的激活状态
+      navItems.forEach(function (nav) {
+        nav.classList.remove('active');
+      });
+      document.querySelector('.navbar div[onclick="loadPage(\'' + page + '\')"]').classList.add('active');
+      sections.forEach(function (section) {
+        section.style.display = 'none';
+      });
+      document.getElementById(page).style.display = 'block';
+      //控制页面标题的显示与隐藏
+      if (page === 'home') {
+        document.querySelector('.page-title').style.display = 'block';
+      } else {
+        document.querySelector('.page-title').style.display = 'none;'
+      }
+    }
+    // 为.step元素添加点击事件监听器
+    var steps = document.querySelectorAll('.step');
+    steps.forEach(function (step) {
+      step.addEventListener('click', function () {
+        var targetId = this.dataset.target; // 获取data-target属性的值，即要切换到的页面id
+        loadPage(targetId);
+      });
+    });
+    navItems.forEach(function (item) {
+      item.addEventListener('click', function () {
+        loadPage(item.textContent.trim()); s
+      });
+    });
+    // JavaScript动画效果
+    document.addEventListener('DOMContentLoaded', function () {
+      var intro = document.querySelector('.page-intro');
+      intro.classList.add('animated-intro');
+    });
+
+    // 改变标题颜色的函数
+    function changeColor(newColor) {
+      document.querySelector('.page-title h1').style.color = newColor;
+    }
+
+    function adjustIframeHeight() {
+      const iframe = document.querySelector('.iframe-container iframe');
+      iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+    }
+
+    // 在页面加载完成后调整高度
+    window.addEventListener('load', function () {
+      const iframe = document.querySelector('.iframe-container iframe');
+      // 设置一个定时器，因为内容可能是异步加载的
+      const adjustHeight = setInterval(() => {
+        if (iframe.contentWindow.document.body) {
+          iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+          clearInterval(adjustHeight); // 内容加载完成后，清除定时器
+        }
+      }, 100);
+    });
+  </script>
+
+</body>
+
+</html>

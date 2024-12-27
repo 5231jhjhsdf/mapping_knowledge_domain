@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识图谱 - Neo4j数据</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    <style>
+        #mynetwork {
+            width: 100%;
+            height: 75vh;
+            border: 1px solid lightgray;
+            overflow: auto;
+            background-color: transparent;
+        }
+
+        #loading-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            /* 如果希望文字在垂直方向堆叠显示，可以添加此属性 */
+            position: fixed;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 250px;
+            height: 120px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 9999;
+            font-size: 18px;
+        }
+
+        #countdown {
+            position: fixed;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 150px;
+            /* 根据实际需要调整宽度 */
+            height: 80px;
+            /* 根据实际需要调整高度 */
+            /* background-color: rgba(0, 0, 0, 0.5); */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 9999;
+        }
+
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0;
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .legend-circle {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .color-box {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
+
+        .button {
+            padding: 10px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background-color: #7fa7d3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s;
+            margin-left: auto;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button:active {
+            background-color: #004085;
+        }
+
+        .overlay {
+            pointer-events: none;
+            /* 允许点击穿透覆盖层，点击到弹窗内容 */
+        }
+
+        .popup {
+            position: fixed;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 400px;
+            height: 250px;
+            /* 根据实际需要调整高度 */
+            background-color: white;
+            padding: 20px;
+            border: 1px solid gray;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px 5px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+        }
+
+        .popup p {
+            line-height: 1.5;
+            /* 设置行高为1.5倍字体大小，可根据需要调整 */
+            margin: 20px 0 10px;
+            /* 设置段落的下边距为10px，可根据需要调整 */
+            text-align: center;
+            font-size: 21px;
+        }
+
+        .popup-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background-color: #7fa7d3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s;
+            margin-top: 80px;
+            float: right;
+            /* margin: 0 auto; */
+        }
+
+        .popup-button:hover {
+            background-color: #0056b3;
+        }
+
+        .popup-button:active {
+            background-color: #004085;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+        .p{
+            text-align: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>症状选择知识图谱</h2>
+    <p class = 'p'>请至少选择三个症状，以便与我们为您预测睡眠相关疾病</p>
+    <div class="legend">
+        <div class="legend-circle">
+            <div class="color-box" style="background-color: #ebe124;"></div>
+            <span>症状</span>
+        </div>
+        <div class="legend-circle">
+            <div class="color-box" style="background-color: #66ace6;"></div>
+            <span>症状种类</span>
+        </div>
+        <div class="legend-circle">
+            <div class="color-box" style="background-color: #e41a1c;"></div>
+            <span>已选中的症状</span>
+        </div>
+
+        <button id="fetchData" class="button">点击获取数据</button>
+    </div>
+    <div id="mynetwork"></div>
+    <button id="nextButton" class="button" style="display:none;">下一步</button>
+    <!-- 添加countdown元素，用于显示倒计时 -->
+    <span id="countdown"></span>
+    <script>
+        let currentCenterNodeId = null;
+        let nodeVisibilityMap = {};
+        let selectedNodeCount = 0;
+        let shouldShowPopupSleepApnea = false;
+        let shouldShowPopupInsomnia = false;
+        let shouldShowPopupParasomnia = false;
+
+        document.getElementById('fetchData').addEventListener('click', async () => {
+            const url = 'http://localhost:3005/dataSingleNodes';
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Fetched data:', data);
+                    const nodes = data.nodes.map(node => ({
+                        id: node.id,
+                        name: node.name,
+                        itemStyle: node.itemStyle || {},
+                        value: 10,
+                        symbolSize: 40,
+                        label: {
+                            show: true,
+                            fontSize: 10,
+                        }
+                    }));
+                    const edges = data.edges.map(edge => ({
+                        source: edge.source,
+                        target: edge.target
+                    }));
+                    const chartDom = document.getElementById('mynetwork');
+                    const myChart = echarts.init(chartDom);
+                    const option = {
+                        title: {
+                            // text: '疾病诊断知识图谱',
+                            // subtext: '展开的节点代表您可能患的疾病',
+                            left: 'center'
+                        },
+                        tooltip: {
+                            formatter: '{b}'
+                        },
+                        series: [{
+                            type: 'graph',
+                            layout: 'force',
+                            symbolSize: 40,
+                            roam: true,
+                            draggable: true,
+                            label: {
+                                show: true
+                            },
+                            edgeSymbol: ['none', 'arrow'],
+                            edgeSymbolSize: [4, 10],
+                            data: nodes,
+                            links: edges,
+                            force: {
+                                repulsion: 100,
+                                gravity: 0.05,
+                                edgeLength: 130,
+                                layoutAnimation: false
+                            },
+                            lineStyle: {
+                                color: 'source',
+                                curveness: 0.3
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    color: 'yellow'
+                                }
+                            }
+                        }]
+                    };
+                    myChart.setOption(option);
+                    myChart.on('click', function (params) {
+                        const clickedNodeId = params.data.id;
+                        if (nodeVisibilityMap[clickedNodeId]) {
+                            nodeVisibilityMap[clickedNodeId] = false;
+                            selectedNodeCount--;
+                        } else {
+                            nodeVisibilityMap[clickedNodeId] = true;
+                            selectedNodeCount++;
+                        }
+                        const updatedNodes = nodes.map(node => {
+                            if (node.id === clickedNodeId) {
+                                node.itemStyle = nodeVisibilityMap[clickedNodeId] ? { color: 'red' } : {};
+                            }
+                            return node;
+                        });
+                        myChart.setOption({
+                            series: [{
+                                type: 'graph',
+                                layout: 'force',
+                                symbolSize: 80,
+                                roam: true,
+                                draggable: true,
+                                label: {
+                                    show: true
+                                },
+                                edgeSymbol: ['none', 'arrow'],
+                                edgeSymbolSize: [4, 10],
+                                data: updatedNodes,
+                                links: edges,
+                                force: {
+                                    repulsion: 200,
+                                    gravity: 0.1,
+                                    edgeLength: 140,
+                                    layoutAnimation: false
+                                },
+                                lineStyle: {
+                                    color: 'source',
+                                    curveness: 0.3
+                                },
+                                emphasis: {
+                                    itemStyle: {
+                                        color: 'yellow'
+                                    }
+                                }
+                            }]
+                        });
+                        if (selectedNodeCount >= 3) {
+                            document.getElementById('nextButton').style.display = 'block';
+                        } else {
+                            document.getElementById('nextButton').style.display = 'none';
+                        }
+                        if (selectedNodeCount === 5) {
+                            shouldShowPopupSleepApnea = true;
+                            shouldShowPopupInsomnia = false;
+                            shouldShowPopupParasomnia = false;
+                        } else if (selectedNodeCount === 4) {
+                            shouldShowPopupSleepApnea = false;
+                            shouldShowPopupInsomnia = true;
+                            shouldShowPopupParasomnia = false;
+                        } else if (selectedNodeCount === 3) {
+                            shouldShowPopupSleepApnea = false;
+                            shouldShowPopupInsomnia = false;
+                            shouldShowPopupParasomnia = true;
+                        }
+                    });
+                } else {
+                    console.error('数据获取失败');
+                }
+            } catch (error) {
+                console.error('请求出错', error);
+            }
+        });
+
+        document.getElementById('nextButton').addEventListener('click', function () {
+            console.log('点击了下一步按钮');
+            if (shouldShowPopupSleepApnea) {
+                // 隐藏下一步按钮
+                document.getElementById('nextButton').style.display = 'none';
+                // 创建提示信息元素
+                const loadingMessage = document.createElement('div');
+                loadingMessage.id = 'loading-message';
+                loadingMessage.style.position = 'fixed';
+                loadingMessage.style.top = '50%';
+                loadingMessage.style.left = '50%';
+                loadingMessage.style.transform = 'translate(-50%, -50%)';
+                loadingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                loadingMessage.style.color = 'white';
+                loadingMessage.style.padding = '10px 20px';
+                loadingMessage.style.borderRadius = '5px';
+                loadingMessage.textContent = '正在为您预测疾病，请稍后......';
+                document.body.appendChild(loadingMessage);
+                // 延迟5秒后弹出弹窗
+                setTimeout(() => {
+                    const countdownElement = document.getElementById('countdown');
+                    if (countdownElement === null) {
+                        console.error('无法获取countdown元素');
+                    } else {
+                        console.log('countdownElement样式:', countdownElement.style);
+                        countdownElement.style.display = 'none';
+                    }
+                    const loadingMessage = document.getElementById('loading-message');
+                    console.log('loadingMessage样式:', loadingMessage.style);
+                    loadingMessage.remove();
+                    showPopup('睡眠呼吸障碍');
+                }, 5000);
+            } else if (shouldShowPopupInsomnia) {
+                // 隐藏下一步按钮
+                document.getElementById('nextButton').style.display = 'none';
+                // 创建提示信息元素
+                const loadingMessage = document.createElement('div');
+                loadingMessage.id = 'loading-message';
+                loadingMessage.style.position = 'fixed';
+                loadingMessage.style.top = '50%';
+                loadingMessage.style.left = '50%';
+                loadingMessage.style.transform = 'translate(-50%, -50%)';
+                loadingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                loadingMessage.style.color = 'white';
+                loadingMessage.style.padding = '10px 20px';
+                loadingMessage.style.borderRadius = '5px';
+                loadingMessage.textContent = '正在为您预测疾病，请稍后......';
+                document.body.appendChild(loadingMessage);
+                // 延迟5秒后弹出弹窗
+                setTimeout(() => {
+                    const countdownElement = document.getElementById('countdown');
+                    if (countdownElement === null) {
+                        console.error('无法获取countdown元素');
+                    } else {
+                        console.log('countdownElement样式:', countdownElement.style);
+                        countdownElement.style.display = 'none';
+                    }
+                    const loadingMessage = document.getElementById('loading-message');
+                    console.log('loadingMessage样式:', loadingMessage.style);
+                    loadingMessage.remove();
+                    showPopup('失眠');
+                }, 5000);
+            } else if (shouldShowPopupParasomnia) {
+                // 隐藏下一步按钮
+                document.getElementById('nextButton').style.display = 'none';
+                // 创建提示信息元素
+                const loadingMessage = document.createElement('div');
+                loadingMessage.id = 'loading-message';
+                loadingMessage.style.position = '固定';
+                loadingMessage.style.top = '50%';
+                loadingMessage.style.left = '50%';
+                loadingMessage.style.transform = 'translate(-50%, -50%)';
+                loadingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                loadingMessage.style.color = 'white';
+                loadingMessage.style.height = '100px'
+                loadingMessage.style.padding = '10px 20px';
+                loadingMessage.style.borderRadius = '5px';
+                loadingMessage.textContent = '正在为您预测疾病，请稍后......';
+                document.body.appendChild(loadingMessage);
+                // 延迟5秒后弹出弹窗
+                setTimeout(() => {
+                    const countdownElement = document.getElementById('countdown');
+                    if (countdownElement === null) {
+                        console.error('无法获取countdown元素');
+                    } else {
+                        console.log('countdownElement样式:', countdownElement.style);
+                        countdownElement.style.display = 'none';
+                    }
+                    const loadingMessage = document.getElementById('loading-message');
+                    console.log('loadingMessage样式:', loadingMessage.style);
+                    loadingMessage.remove();
+                    showPopup('异态睡眠疾病');
+                }, 5000);
+            }
+        });
+
+        function showPopup(predictedDisease) {
+            // 创建覆盖层元素
+            const overlay = document.createElement('div');
+            overlay.classList.add('overlay');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            overlay.style.zIndex = '998';
+            document.body.appendChild(overlay);
+
+            const popup = document.createElement('div');
+            popup.classList.add('popup');
+            popup.style.position = '固定';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.backgroundColor = 'white';
+            popup.style.padding = '20px';
+            popup.style.width = '300px';
+            popup.style.border = '1px solid gray';
+            popup.style.borderRadius = '5px';
+            popup.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)';
+            popup.style.zIndex = '999';
+            popup.innerHTML = `
+                <p>根据您点击的症状初步预测您可能的疾病为<strong>${predictedDisease}</strong>。</p>
+                <p>点击下一步，查看有关该疾病的相关信息知识图谱。</p>
+            `;
+            document.body.appendChild(popup);
+
+            const nextButton = document.createElement('button');
+            nextButton.classList.add('popup-button');
+            nextButton.style.marginTop = '10px';
+            nextButton.textContent = '下一步';
+            nextButton.addEventListener('click', () => {
+                window.open(`${predictedDisease}.html?disease=${predictedDisease}`, '_blank');
+                popup.remove();
+                overlay.remove();
+            });
+            popup.appendChild(nextButton);
+        }
+    </script>
+</body>
+
+</html>
